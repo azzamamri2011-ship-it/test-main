@@ -13,8 +13,6 @@ app.add_middleware(
 )
 
 ytmusic = YTMusic()
-home_cache = {}
-CACHE_TTL = 3600 # 1 Jam
 
 def format_results(search_results):
     cleaned_results = []
@@ -31,26 +29,30 @@ def format_results(search_results):
 @app.get("/api/search")
 def search_music(query: str):
     try:
+        # Mencari lagu berdasarkan query
         search_results = ytmusic.search(query, filter="songs", limit=15)
+        # Mengembalikan data dalam objek 'data' agar konsisten
         return {"status": "success", "data": format_results(search_results)}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/play")
+def get_audio_url(videoId: str):
+    try:
+        # Logika sederhana: arahkan ke layanan eksternal atau stream
+        # Untuk implementasi penuh, biasanya butuh yt-dlp di server
+        playback_url = f"https://www.youtube.com/watch?v={videoId}"
+        return {"status": "success", "audio": playback_url}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 @app.get("/api/home")
 def get_home_data():
-    current_time = time.time()
-    if "data" in home_cache and (current_time - home_cache["timestamp"] < CACHE_TTL):
-        return {"status": "success", "data": home_cache["data"]}
-
     try:
         data = {
-            "recent": format_results(ytmusic.search('lagu hits indonesia 2025', filter="songs", limit=6)),
-            "trending": format_results(ytmusic.search('trending music indonesia', filter="songs", limit=10)),
-            "chill": format_results(ytmusic.search('lagu santai cafe indonesia', filter="songs", limit=10)),
-            "galau": format_results(ytmusic.search('lagu galau indonesia terbaik', filter="songs", limit=10))
+            "recent": format_results(ytmusic.search('lagu hits indonesia', filter="songs", limit=6)),
+            "trending": format_results(ytmusic.search('trending music', filter="songs", limit=10))
         }
-        home_cache["data"] = data
-        home_cache["timestamp"] = current_time
         return {"status": "success", "data": data}
     except Exception as e:
         return {"status": "error", "message": str(e)}
