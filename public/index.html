@@ -502,12 +502,28 @@
                 results.innerHTML = "";
 
                 try {
-                    // 🔥 FETCH KE BACKEND PYTHON (SESUAIKAN URL)
-                    const response = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
-                    const data = await response.json();
+        try {
+            // Fetch ke backend Python
+            const response = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
+            const result = await response.json();
 
-                    this.renderResults(data);
-                    
+            // CEK STATUS DARI PYTHON
+            if (result.status === "success") {
+                this.renderResults(result.data); // Ambil .data karena Python mengirim {status:..., data:...}
+                
+                statusIcon.innerHTML = '<i class="fas fa-check-circle" style="color: var(--primary)"></i>';
+                statusTitle.innerText = "Pencarian Selesai";
+            } else {
+                throw new Error(result.message || "Gagal mengambil data");
+            }
+
+        } catch (err) {
+            console.error(err);
+            this.showToast("Gagal terhubung ke API Python");
+            statusIcon.innerHTML = '<i class="fas fa-times-circle" style="color: var(--accent)"></i>';
+            statusTitle.innerText = "Error Koneksi";
+        }
+
                     statusIcon.innerHTML = '<i class="fas fa-check-circle" style="color: var(--primary)"></i>';
                     statusTitle.innerText = "Pencarian Selesai";
                 } catch (err) {
